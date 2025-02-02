@@ -4,7 +4,7 @@ document.getElementById('login-form').addEventListener('submit', function(e) {
     const username = document.querySelector('input[name="username"]').value;
     const password = document.querySelector('input[name="password"]').value;
 
-    // Simple validation (you can replace this with actual authentication logic)
+    // Simple validation: check if the username is 'Wafi' and the password is '28'
     if (username === 'Wafi' && password === '28') {
         window.location.href = 'dashboard.html';
     } else {
