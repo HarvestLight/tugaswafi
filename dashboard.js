@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     databaseLink.addEventListener('click', () => {
         setActiveSection(databaseSection);
+        loadData();
     });
 
     function setActiveSection(section) {
@@ -29,13 +30,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     dataForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        addData(nameInput.value || 'N/A', amountInput.value || 'N/A', locationInput.value || 'N/A');
+        const data = {
+            name: nameInput.value || 'N/A',
+            amount: amountInput.value || 'N/A',
+            location: locationInput.value || 'N/A'
+        };
+        addData(data);
+        saveData(data);
         nameInput.value = '';
         amountInput.value = '';
         locationInput.value = '';
     });
 
-    function addData(name, amount, location) {
+    function addData(data) {
         const row = dataTable.insertRow();
         const cellName = row.insertCell(0);
         const cellAmount = row.insertCell(1);
@@ -43,9 +50,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const cellActions = row.insertCell(3);
         cellActions.classList.add('actions');
 
-        cellName.textContent = name;
-        cellAmount.textContent = amount;
-        cellLocation.textContent = location;
+        cellName.textContent = data.name;
+        cellAmount.textContent = data.amount;
+        cellLocation.textContent = data.location;
 
         const editButton = document.createElement('button');
         editButton.textContent = 'Edit';
@@ -65,12 +72,36 @@ document.addEventListener('DOMContentLoaded', () => {
         const newName = prompt('Edit name:', row.cells[0].textContent);
         const newAmount = prompt('Edit amount:', row.cells[1].textContent);
         const newLocation = prompt('Edit location:', row.cells[2].textContent);
-        row.cells[0].textContent = newName || 'N/A';
-        row.cells[1].textContent = newAmount || 'N/A';
-        row.cells[2].textContent = newLocation || 'N/A';
+        if (newName && newAmount && newLocation) {
+            row.cells[0].textContent = newName;
+            row.cells[1].textContent = newAmount;
+            row.cells[2].textContent = newLocation;
+        }
     }
 
     function deleteData(row) {
         dataTable.deleteRow(row.rowIndex - 1);
+    }
+
+    function saveData(data) {
+        fetch('/api/data', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.text())
+        .then(message => console.log(message))
+        .catch(error => console.error('Error:', error));
+    }
+
+    function loadData() {
+        fetch('/api/data')
+        .then(response => response.json())
+        .then(data => {
+            data.forEach(item => addData(item));
+        })
+        .catch(error => console.error('Error:', error));
     }
 });
