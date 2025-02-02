@@ -6,7 +6,7 @@ const app = express();
 const PORT = 3000;
 
 // Replace with your MongoDB Atlas connection string
-const mongoURI = 'mongodb+srv://<username>:<password>@cluster0.mongodb.net/<dbname>?retryWrites=true&w=majority';
+const mongoURI = 'mongodb+srv://Wafi:28@cluster0.mongodb.net/Wafi?retryWrites=true&w=majority';
 
 // Connect to MongoDB Atlas
 mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
