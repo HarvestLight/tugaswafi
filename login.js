@@ -20,3 +20,8 @@ document.getElementById('show-password').addEventListener('change', function() {
         passwordField.type = 'password';
     }
 });
+
+document.getElementById('forgot-password-link').addEventListener('click', function(e) {
+    e.preventDefault();
+    alert('Lupa? Usernamenya : Wafi , Passwordnya : 28.');
+});
