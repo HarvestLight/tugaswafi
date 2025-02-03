@@ -1,53 +1,71 @@
 const express = require('express');
-const mongoose = require('mongoose');
+const { MongoClient, ServerApiVersion } = require('mongodb');
 const bodyParser = require('body-parser');
 const path = require('path');
 const app = express();
 const PORT = 3000;
 
 // Replace with your MongoDB Atlas connection string
-const mongoURI = 'mongodb+srv://Wafi:28@cluster0.mongodb.net/Wafi?retryWrites=true&w=majority';
+const uri = "mongodb+srv://Wafi:28@cluster0.kniew.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 
-// Connect to MongoDB Atlas
-mongoose.connect(mongoURI, { useNewUrlParser: true, useUnifiedTopology: true })
-    .then(() => console.log('MongoDB connected'))
-    .catch(err => console.log(err));
-
-// Define a schema and model for the data
-const dataSchema = new mongoose.Schema({
-    name: String,
-    amount: Number,
-    location: String
+// Create a MongoClient with a MongoClientOptions object to set the Stable API version
+const client = new MongoClient(uri, {
+  serverApi: {
+    version: ServerApiVersion.v1,
+    strict: true,
+    deprecationErrors: true,
+  }
 });
 
-const Data = mongoose.model('Data', dataSchema);
+async function run() {
+  try {
+    // Connect the client to the server
+    await client.connect();
+    // Send a ping to confirm a successful connection
+    await client.db("admin").command({ ping: 1 });
+    console.log("Pinged your deployment. You successfully connected to MongoDB!");
 
-// Middleware
-app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname)));
+    // Define a schema and model for the data
+    const database = client.db('mydatabase');
+    const collection = database.collection('datas');
 
-// Serve the index.html file from the root directory
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
-});
+    // Middleware
+    app.use(bodyParser.json());
+    app.use(express.static(path.join(__dirname)));
 
-// API endpoint to save data
-app.post('/api/data', (req, res) => {
-    const newData = new Data(req.body);
-    newData.save((err) => {
-        if (err) return res.status(500).send(err);
-        return res.status(200).send('Data saved successfully');
+    // Serve the index.html file from the root directory
+    app.get('/', (req, res) => {
+      res.sendFile(path.join(__dirname, 'index.html'));
     });
-});
 
-// API endpoint to get data
-app.get('/api/data', (req, res) => {
-    Data.find({}, (err, data) => {
-        if (err) return res.status(500).send(err);
-        return res.status(200).json(data);
+    // API endpoint to save data
+    app.post('/api/data', async (req, res) => {
+      try {
+        const newData = req.body;
+        await collection.insertOne(newData);
+        res.status(200).send('Data saved successfully');
+      } catch (err) {
+        res.status(500).send(err);
+      }
     });
-});
 
-app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
-});
+    // API endpoint to get data
+    app.get('/api/data', async (req, res) => {
+      try {
+        const data = await collection.find({}).toArray();
+        res.status(200).json(data);
+      } catch (err) {
+        res.status(500).send(err);
+      }
+    });
+
+    app.listen(PORT, () => {
+      console.log(`Server is running on http://localhost:${PORT}`);
+    });
+
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+run().catch(console.dir);

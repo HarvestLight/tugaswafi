@@ -3,14 +3,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const databaseLink = document.getElementById('database-link');
     const homeSection = document.getElementById('home-section');
     const databaseSection = document.getElementById('database-section');
+    const saveButton = document.getElementById('save-button');
 
-    homeLink.addEventListener('click', () => {
+    homeLink.addEventListener('click', (e) => {
+        e.preventDefault();
         setActiveSection(homeSection);
     });
 
-    databaseLink.addEventListener('click', () => {
+    databaseLink.addEventListener('click', (e) => {
+        e.preventDefault();
         setActiveSection(databaseSection);
         loadData();
+    });
+
+    saveButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        saveAllData();
     });
 
     function setActiveSection(section) {
@@ -36,7 +44,6 @@ document.addEventListener('DOMContentLoaded', () => {
             location: locationInput.value || 'N/A'
         };
         addData(data);
-        saveData(data);
         nameInput.value = '';
         amountInput.value = '';
         locationInput.value = '';
@@ -94,6 +101,19 @@ document.addEventListener('DOMContentLoaded', () => {
         .then(response => response.text())
         .then(message => console.log(message))
         .catch(error => console.error('Error:', error));
+    }
+
+    function saveAllData() {
+        const rows = dataTable.rows;
+        for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
+            const data = {
+                name: row.cells[0].textContent,
+                amount: row.cells[1].textContent,
+                location: row.cells[2].textContent
+            };
+            saveData(data);
+        }
     }
 
     function loadData() {
