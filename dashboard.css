@@ -13,7 +13,7 @@ body {
     justify-content: space-between;
     align-items: center;
     padding: 10px 20px;
-    background-color: #007BFF;
+    background-color:rgb(255, 85, 0);
     color: white;
 }
 
@@ -99,14 +99,14 @@ body {
 }
 
 .subsection form button {
-    background-color: #007BFF;
+    background-color:rgb(255, 119, 0);
     color: white;
     border: none;
     cursor: pointer;
 }
 
 .subsection form button:hover {
-    background-color: #0056b3;
+    background-color:rgb(222, 215, 33);
 }
 
 .table-container {
