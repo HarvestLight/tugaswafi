@@ -1,71 +1,120 @@
-const express = require('express');
-const { MongoClient, ServerApiVersion } = require('mongodb');
-const bodyParser = require('body-parser');
-const path = require('path');
-const app = express();
-const PORT = 3000;
+document.addEventListener('DOMContentLoaded', () => {
+  const homeLink = document.getElementById('home-link');
+  const databaseLink = document.getElementById('database-link');
+  const homeSection = document.getElementById('home-section');
+  const databaseSection = document.getElementById('database-section');
 
-// Replace with your MongoDB Atlas connection string
-const uri = "mongodb+srv://Wafi:28@cluster0.kniew.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+  homeLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      setActiveSection(homeSection);
+  });
 
-// Create a MongoClient with a MongoClientOptions object to set the Stable API version
-const client = new MongoClient(uri, {
-  serverApi: {
-    version: ServerApiVersion.v1,
-    strict: true,
-    deprecationErrors: true,
+  databaseLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      setActiveSection(databaseSection);
+      loadData();
+  });
+
+  function setActiveSection(section) {
+      document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+      section.classList.add('active');
   }
+
+  // Default to showing the home section
+  setActiveSection(homeSection);
+
+  // Data management functionality
+  const dataForm = document.getElementById('data-form');
+  const nameInput = document.getElementById('name-input');
+  const amountInput = document.getElementById('amount-input');
+  const locationInput = document.getElementById('location-input');
+  const dataTable = document.getElementById('data-table').getElementsByTagName('tbody')[0];
+
+  dataForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const data = {
+          name: nameInput.value || 'N/A',
+          amount: amountInput.value || 'N/A',
+          location: locationInput.value || 'N/A'
+      };
+      addData(data);
+      saveData(data);
+      nameInput.value = '';
+      amountInput.value = '';
+      locationInput.value = '';
+  });
+
+  function addData(data) {
+      const row = dataTable.insertRow();
+      const cellName = row.insertCell(0);
+      const cellAmount = row.insertCell(1);
+      const cellLocation = row.insertCell(2);
+      const cellActions = row.insertCell(3);
+      cellActions.classList.add('actions');
+
+      cellName.textContent = data.name;
+      cellAmount.textContent = data.amount;
+      cellLocation.textContent = data.location;
+
+      const editButton = document.createElement('button');
+      editButton.textContent = 'Edit';
+      editButton.classList.add('edit');
+      editButton.addEventListener('click', () => editData(row));
+
+      const deleteButton = document.createElement('button');
+      deleteButton.textContent = 'Delete';
+      deleteButton.classList.add('delete');
+      deleteButton.addEventListener('click', () => deleteData(row));
+
+      cellActions.appendChild(editButton);
+      cellActions.appendChild(deleteButton);
+  }
+
+  function editData(row) {
+      const newName = prompt('Edit name:', row.cells[0].textContent);
+      const newAmount = prompt('Edit amount:', row.cells[1].textContent);
+      const newLocation = prompt('Edit location:', row.cells[2].textContent);
+      if (newName && newAmount && newLocation) {
+          row.cells[0].textContent = newName;
+          row.cells[1].textContent = newAmount;
+          row.cells[2].textContent = newLocation;
+          updateLocalStorage();
+      }
+  }
+
+  function deleteData(row) {
+      dataTable.deleteRow(row.rowIndex - 1);
+      updateLocalStorage();
+  }
+
+  function saveData(data) {
+      const existingData = JSON.parse(localStorage.getItem('data')) || [];
+      existingData.push(data);
+      localStorage.setItem('data', JSON.stringify(existingData));
+  }
+
+  function loadData() {
+      // Clear the table before loading data
+      dataTable.innerHTML = '';
+      const data = JSON.parse(localStorage.getItem('data')) || [];
+      data.forEach(item => addData(item));
+  }
+
+  function updateLocalStorage() {
+      const rows = dataTable.rows;
+      const data = [];
+      for (let i = 0; i < rows.length; i++) {
+          const row = rows[i];
+          const rowData = {
+              name: row.cells[0].textContent,
+              amount: row.cells[1].textContent,
+              location: row.cells[2].textContent
+          };
+          data.push(rowData);
+      }
+      localStorage.setItem('data', JSON.stringify(data));
+  }
+
+  // Load data initially when the page loads
+  loadData();
 });
-
-async function run() {
-  try {
-    // Connect the client to the server
-    await client.connect();
-    // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
-    console.log("Pinged your deployment. You successfully connected to MongoDB!");
-
-    // Define a schema and model for the data
-    const database = client.db('mydatabase');
-    const collection = database.collection('datas');
-
-    // Middleware
-    app.use(bodyParser.json());
-    app.use(express.static(path.join(__dirname)));
-
-    // Serve the index.html file from the root directory
-    app.get('/', (req, res) => {
-      res.sendFile(path.join(__dirname, 'index.html'));
-    });
-
-    // API endpoint to save data
-    app.post('/api/data', async (req, res) => {
-      try {
-        const newData = req.body;
-        await collection.insertOne(newData);
-        res.status(200).send('Data saved successfully');
-      } catch (err) {
-        res.status(500).send(err);
-      }
-    });
-
-    // API endpoint to get data
-    app.get('/api/data', async (req, res) => {
-      try {
-        const data = await collection.find({}).toArray();
-        res.status(200).json(data);
-      } catch (err) {
-        res.status(500).send(err);
-      }
-    });
-
-    app.listen(PORT, () => {
-      console.log(`Server is running on http://localhost:${PORT}`);
-    });
-
-  } catch (err) {
-    console.error(err);
-  }
-}
-
-run().catch(console.dir);

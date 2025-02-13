@@ -78,32 +78,43 @@ document.addEventListener('DOMContentLoaded', () => {
             row.cells[0].textContent = newName;
             row.cells[1].textContent = newAmount;
             row.cells[2].textContent = newLocation;
+            updateLocalStorage();
         }
     }
 
     function deleteData(row) {
         dataTable.deleteRow(row.rowIndex - 1);
+        updateLocalStorage();
     }
 
     function saveData(data) {
-        fetch('/api/data', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(data)
-        })
-        .then(response => response.text())
-        .then(message => console.log(message))
-        .catch(error => console.error('Error:', error));
+        const existingData = JSON.parse(localStorage.getItem('data')) || [];
+        existingData.push(data);
+        localStorage.setItem('data', JSON.stringify(existingData));
     }
 
     function loadData() {
-        fetch('/api/data')
-        .then(response => response.json())
-        .then(data => {
-            data.forEach(item => addData(item));
-        })
-        .catch(error => console.error('Error:', error));
+        // Clear the table before loading data
+        dataTable.innerHTML = '';
+        const data = JSON.parse(localStorage.getItem('data')) || [];
+        data.forEach(item => addData(item));
     }
+
+    function updateLocalStorage() {
+        const rows = dataTable.rows;
+        const data = [];
+        for (let i = 0; i < rows.length; i++) {
+            const row = rows[i];
+            const rowData = {
+                name: row.cells[0].textContent,
+                amount: row.cells[1].textContent,
+                location: row.cells[2].textContent
+            };
+            data.push(rowData);
+        }
+        localStorage.setItem('data', JSON.stringify(data));
+    }
+
+    // Load data initially when the page loads
+    loadData();
 });
